@@ -3,7 +3,14 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define GRAVITY_CONSTANT 9.81
+const int screenWidth = 400;
+const int screenHeight = 500;
+
+/*********************************
+			POSITION
+*********************************/
+
+const kGravityConstant = 9.81;
 
 struct Position
 {
@@ -17,37 +24,40 @@ struct Velocity
 	double y;
 };
 
+/*********************************
+			PLAYER
+*********************************/
+
+const kPlayerWidth = 0;
+const kPlayerHeight = 0;
+
 struct Player
 {
 	//// PUBLIC ////
-	Player() {};
-
-	Player(struct Position startingPos)
-	{
-		pos = startingPos;
-		vel = { 0.0, 0.0 };
-	}
-
 	struct Position pos;
 	struct Velocity vel;
-
-	void update() {};
-	void draw() {};
-
-	Player& operator=(const Player& rhs)
-	{
-		this->pos = rhs.pos;
-		this->vel = rhs.vel;
-
-		return *this;
-	}
-
-	//// PRIVATE ////
-	const double width_priv = 0;
-	const double height_priv = 0;
 };
 
-enum PlatformType { DEFAULT };
+struct Player PlayerConstructor(struct Position startingPos);
+
+struct Player PlayerConstructor(struct Position startingPos)
+{
+	struct Player player;
+
+	player.pos = startingPos;
+
+	struct Velocity vel = { 0.0, 0.0 };
+	player.vel = vel;
+
+	return player;
+}
+
+/*********************************
+			PLATFORM
+*********************************/
+
+const kPlatformWidth = 0;
+const kPlatformHeight = 0;
 
 struct Platform
 {
@@ -55,50 +65,56 @@ struct Platform
 	struct Position pos;
 	struct Velocity vel;
 	enum PlatformType type;
-
-	//// PRIVATE ////
-	const double width_priv;
-	const double height_priv;
 };
+
+/*********************************
+			GAME
+*********************************/
 
 struct Game
 {
-	//// PUBLIC ////
-	Game(int& _framesPerSec, bool& _playGame)
-	{
-		framesPerSec = _framesPerSec;
-		playGame = _playGame;
-
-		// Create player object
-		struct Position playerInitialPos = { screenWidth / 2, 0 };
-		player = struct Player(playerInitialPos);
-
-		// Generate initial platforms
-		int numPlatforms = 10;
-		platforms = getNewPlatforms(numPlatforms);
-
-		// Generate platforms positions randomly
-		for (int i = 0; i < numPlatforms; ++i)
-		{
-			// For initial platforms, height should be within top two-thirds of screen
-			struct Position platformPos = { rand() % screenWidth, (screenHeight / 3) + rand() % (screenHeight - (screenHeight / 3)) };
-			platforms[i].pos = platformPos;
-		}
-	}
-
 	//// PRIVATE ////
-	bool& playGame;
-	int& framesPerSec;
+	bool* playGame;
+	int* framesPerSec;
 	struct Player player;
 	struct Platform* platforms;
-	const int screenHeight = 533;
-	const int screenWidth = 400;
-
-	struct Platform* getNewPlatforms(int numPlatforms)
-	{
-		return malloc(numPlatforms * sizeof(struct Platform));
-	}
 };
+
+struct Game GameConstructor(int* framesPerSec, bool* playGame);
+struct Platform* getNewPlatforms(int numPlatforms);
+
+struct Game GameConstructor(int* framesPerSec, bool* playGame)
+{
+	struct Game game;
+
+	game.framesPerSec = framesPerSec;
+	game.playGame = playGame;
+
+	// Create player object
+	struct Position playerInitialPos = { screenWidth / 2, 0 };
+	game.player = PlayerConstructor(playerInitialPos);
+
+	// Generate initial platforms
+	int numPlatforms = 10;
+	game.platforms = getNewPlatforms(numPlatforms);
+
+	// Generate platforms positions randomly
+	for (int i = 0; i < numPlatforms; ++i)
+	{
+		// For initial platforms, height should be within top two-thirds of screen
+		struct Position platformPos = { rand() % screenWidth, (screenHeight / 3) + rand() % (screenHeight - (screenHeight / 3)) };
+		game.platforms[i].pos = platformPos;
+	}
+}
+
+struct Platform* getNewPlatforms(int numPlatforms)
+{
+	return malloc(numPlatforms * sizeof(struct Platform));
+}
+
+/*********************************
+			MAIN
+*********************************/
 
 int main()
 {
