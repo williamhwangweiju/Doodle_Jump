@@ -1,7 +1,14 @@
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+enum bool{ false = 0, true = 1 };
+
+enum KeyboardCodes
+{
+	RIGHT_MAKE = 0xE074,
+	RIGHT_BREAK = 0xF074,
+	LEFT_MAKE = 0xE06B,
+	LEFT_BREAK = 0xF06B
+};
+
+const volatile int* PS2_ptr = (int*)0xFF200100;
 
 const int screenWidth = 400;
 const int screenHeight = 500;
@@ -39,6 +46,7 @@ struct Player
 };
 
 struct Player PlayerConstructor(struct Position startingPos);
+void Player_draw(struct Player* player);
 
 struct Player PlayerConstructor(struct Position startingPos)
 {
@@ -46,15 +54,19 @@ struct Player PlayerConstructor(struct Position startingPos)
 
 	player.pos = startingPos;
 
-	struct Velocity vel = { 0.0, 0.0 };
+	struct Velocity vel = { 0.0, 2 * kGravityConstant * screenHeight / 2 };
 	player.vel = vel;
 
 	return player;
 }
 
+void Player_draw(struct Player* player) {}
+
 /*********************************
 			PLATFORM
 *********************************/
+
+enum PlatformType { DEFAULT };
 
 const kPlatformWidth = 0;
 const kPlatformHeight = 0;
@@ -67,6 +79,10 @@ struct Platform
 	enum PlatformType type;
 };
 
+void Platform_draw(struct Platform* platform);
+
+void Platform_draw(struct Platform* platform) {}
+
 /*********************************
 			GAME
 *********************************/
@@ -74,16 +90,21 @@ struct Platform
 struct Game
 {
 	//// PRIVATE ////
-	bool* playGame;
-	int* framesPerSec;
+	enum bool* playGame;
+	int framesPerSec;
 	struct Player player;
-	struct Platform* platforms;
+	struct Platform platforms[10];
+	enum bool right;
+	enum bool left;
 };
 
-struct Game GameConstructor(int* framesPerSec, bool* playGame);
-struct Platform* getNewPlatforms(int numPlatforms);
+struct Game GameConstructor(int framesPerSec, enum bool* playGame);
+void Game_update(struct Game* game);
+int Game_getKeyboardData();
+void Game_updatePlayerDirection(struct Game* game);
+void Game_draw(struct Game* game);
 
-struct Game GameConstructor(int* framesPerSec, bool* playGame)
+struct Game GameConstructor(int framesPerSec, enum bool* playGame)
 {
 	struct Game game;
 
@@ -94,23 +115,67 @@ struct Game GameConstructor(int* framesPerSec, bool* playGame)
 	struct Position playerInitialPos = { screenWidth / 2, 0 };
 	game.player = PlayerConstructor(playerInitialPos);
 
-	// Generate initial platforms
-	int numPlatforms = 10;
-	game.platforms = getNewPlatforms(numPlatforms);
+	// No keyboard inputs by default
+	game.right = false;
+	game.left = false;
 
 	// Generate platforms positions randomly
-	for (int i = 0; i < numPlatforms; ++i)
+	for (int i = 0; i < 10; ++i)
 	{
 		// For initial platforms, height should be within top two-thirds of screen
-		struct Position platformPos = { rand() % screenWidth, (screenHeight / 3) + rand() % (screenHeight - (screenHeight / 3)) };
+		struct Position platformPos = {rand() % screenWidth, (screenHeight / 3) + rand() % (screenHeight - (screenHeight / 3))};
 		game.platforms[i].pos = platformPos;
+
+		// Set velocity to 0
+		struct Velocity platformVel = { 0.0, 0.0 };
+		game.platforms[i].vel = platformVel;
+
+		// Set type to default
+		game.platforms[i].type = DEFAULT;
 	}
 }
 
-struct Platform* getNewPlatforms(int numPlatforms)
+void Game_update(struct Game* game)
 {
-	return malloc(numPlatforms * sizeof(struct Platform));
+	// Check for keyboard left or right inputs
+	Game_updatePlayerDirection(game);
 }
+
+int Game_getKeyboardData()
+{
+	int keyboardData = *(PS2_ptr);
+	int RVALID = (keyboardData & 0x8000);
+
+	if (RVALID != 0)
+	{
+		return keyboardData & 0xff;
+	}
+}
+
+void Game_updatePlayerDirection(struct Game* game)
+{
+	int key = Game_getKeyboardData();
+
+	// Update right attribute
+	if (!game->right && key == RIGHT_MAKE)
+	{
+		game->right = true;
+	} else if (game->right && key == RIGHT_BREAK)
+	{
+		game->right = false;
+	}
+
+	// Update left attribute
+	if (!game->left && key == LEFT_MAKE)
+	{
+		game->left = true;
+	} else if (game->left && key == LEFT_BREAK)
+	{
+		game->left = false;
+	}
+}
+
+void Game_draw(struct Game* game) {}
 
 /*********************************
 			MAIN
@@ -118,23 +183,17 @@ struct Platform* getNewPlatforms(int numPlatforms)
 
 int main()
 {
-	printf("Doodle Jump!");
-
-	// Seed RNG
-	srand(time(NULL));
-
 	// Get current time. Used to maintain frame rate
-	time_t previous;
-	time(&previous);
 	int framesPerSec = 60;
 
 	// Initialize game
-	bool playGame = true;
-	struct Game game(framesPerSec, playGame);
+	enum bool playGame = true;
+	struct Game game = GameConstructor(framesPerSec, &playGame);
 
 	// Game loop
 	while (playGame)
 	{
-
+		Game_update(&game);
+		Game_draw(&game);
 	}
 }
