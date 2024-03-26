@@ -8,15 +8,6 @@
 // Define 2D array to store uint16_t elements
 uint16_t **doodle_map_2d;
 uint16_t **background_map_2d;
-volatile int pixel_buffer_start;
-
-void plot_pixel(int x, int y, short int line_color) {
-    volatile short int *one_pixel_address;
-        
-    one_pixel_address = pixel_buffer_start + (y << 10) + (x << 1);
-        
-    *one_pixel_address = line_color;
-}
 
 void convert_to_2d(uint16_t **matrix, const uint8_t *arr, int row, int col) {
     int i, j, k = 0;
@@ -30,7 +21,7 @@ void convert_to_2d(uint16_t **matrix, const uint8_t *arr, int row, int col) {
     }
 }
 
-void draw_doodle(int x, int y) {
+void draw_doodle() {
 const uint8_t doodle_map[] = {
   // Insert the generated image array here
   /*Pixel format: Red: 5 bit, Green: 6 bit, Blue: 5 bit*/
@@ -87,10 +78,10 @@ const uint8_t doodle_map[] = {
     // Call function to convert to 2D array and merge two adjacent 8-bit values into one 16-bit value
     convert_to_2d(doodle_map_2d, doodle_map, image_height, image_width);
 
-    int start_x = x; // Center the image horizontally
-    int start_y = y; // Center the image vertically
+    // int start_x = x; // Center the image horizontally
+    // int start_y = y; // Center the image vertically
 
-    
+    /*
     // Draw the doodle image
     for (int y = 0; y < image_height - 1; y++) {
         for (int x = 0; x < image_width; x++) {
@@ -107,6 +98,7 @@ const uint8_t doodle_map[] = {
         free(doodle_map_2d[i]);
     }
     free(doodle_map_2d);
+    */
 	
 }
 
@@ -365,9 +357,6 @@ void draw_backgound() {
 	int image_width = 320; // Image width based on doodle_map dimensions
     int image_height = 247; // Image height based on doodle_map dimensions
 
-    // Define 2D array to store uint16_t elements
-    uint16_t **background_map_2d;
-
     // Allocate memory for the 2D array
     background_map_2d = (uint16_t **)malloc(image_height * sizeof(uint16_t *));
     for (int i = 0; i < image_height; i++) {
@@ -377,10 +366,10 @@ void draw_backgound() {
     // Call function to convert to 2D array and merge two adjacent 8-bit values into one 16-bit value
     convert_to_2d(background_map_2d, background_map, image_height, image_width);
 
-    int start_x = (320 - image_width) / 2; // Center the image horizontally
-    int start_y = (240 - image_height) / 2; // Center the image vertically
+    // int start_x = (320 - image_width) / 2; // Center the image horizontally
+    // int start_y = (240 - image_height) / 2; // Center the image vertically
 
-    
+    /*
     // Draw the doodle image
     for (int y = 0; y < image_height - 1; y++) {
         for (int x = 0; x < image_width; x++) {
@@ -390,11 +379,11 @@ void draw_backgound() {
 			
         }
     }
-    
 
     // Free memory allocated for 2D array
     for (int i = 0; i < image_height; i++) {
         free(background_map_2d[i]);
     }
     free(background_map_2d);
+    */
 }
