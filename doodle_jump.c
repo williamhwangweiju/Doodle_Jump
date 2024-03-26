@@ -35,8 +35,8 @@ struct Velocity
 			PLAYER
 *********************************/
 
-const kPlayerWidth = 0;
-const kPlayerHeight = 0;
+const int kPlayerWidth = 0; // WILLIAM
+const int kPlayerHeight = 0; // WILLIAM
 
 struct Player
 {
@@ -45,13 +45,14 @@ struct Player
 	struct Velocity vel;
 };
 
-struct Player PlayerConstructor(struct Position startingPos);
+struct Player PlayerConstructor();
 void Player_draw(struct Player* player);
 
-struct Player PlayerConstructor(struct Position startingPos)
+struct Player PlayerConstructor()
 {
 	struct Player player;
 
+	struct Position startingPos = { screenWidth / 2, 0 };
 	player.pos = startingPos;
 
 	struct Velocity vel = { 0.0, 2 * kGravityConstant * screenHeight / 2 };
@@ -60,7 +61,9 @@ struct Player PlayerConstructor(struct Position startingPos)
 	return player;
 }
 
-void Player_draw(struct Player* player) {}
+void Player_draw(struct Player* player) {
+	// WILLIAM
+}
 
 /*********************************
 			PLATFORM
@@ -68,8 +71,8 @@ void Player_draw(struct Player* player) {}
 
 enum PlatformType { DEFAULT };
 
-const kPlatformWidth = 0;
-const kPlatformHeight = 0;
+const int kPlatformWidth = 0; // WILLIAM
+const int kPlatformHeight = 0; // WILLIAM
 
 struct Platform
 {
@@ -81,7 +84,9 @@ struct Platform
 
 void Platform_draw(struct Platform* platform);
 
-void Platform_draw(struct Platform* platform) {}
+void Platform_draw(struct Platform* platform) {
+	// WILLIAM
+}
 
 /*********************************
 			GAME
@@ -103,6 +108,7 @@ void Game_update(struct Game* game);
 int Game_getKeyboardData();
 void Game_updatePlayerDirection(struct Game* game);
 void Game_draw(struct Game* game);
+void Game_drawBackground();
 
 struct Game GameConstructor(int framesPerSec, enum bool* playGame)
 {
@@ -112,8 +118,7 @@ struct Game GameConstructor(int framesPerSec, enum bool* playGame)
 	game.playGame = playGame;
 
 	// Create player object
-	struct Position playerInitialPos = { screenWidth / 2, 0 };
-	game.player = PlayerConstructor(playerInitialPos);
+	game.player = PlayerConstructor();
 
 	// No keyboard inputs by default
 	game.right = false;
@@ -156,7 +161,7 @@ void Game_updatePlayerDirection(struct Game* game)
 {
 	int key = Game_getKeyboardData();
 
-	// Update right attribute
+	// Update right arrow
 	if (!game->right && key == RIGHT_MAKE)
 	{
 		game->right = true;
@@ -165,7 +170,7 @@ void Game_updatePlayerDirection(struct Game* game)
 		game->right = false;
 	}
 
-	// Update left attribute
+	// Update left arrow
 	if (!game->left && key == LEFT_MAKE)
 	{
 		game->left = true;
@@ -175,7 +180,21 @@ void Game_updatePlayerDirection(struct Game* game)
 	}
 }
 
-void Game_draw(struct Game* game) {}
+void Game_draw(struct Game* game) {
+	Game_drawBackground();
+
+	Player_draw(&(game->player));
+
+	for (int i = 0; i < 10; ++i)
+	{
+		Platform_draw(&(game->platforms[i]));
+	}
+}
+
+void Game_drawBackground()
+{
+	// WILLIAM
+}
 
 /*********************************
 			MAIN
