@@ -159,7 +159,7 @@ const uint8_t doodle_map[] = {
 	
 }
 
-void draw_backgound() {
+void draw_background() {
     const uint8_t background_map[] = {
   // Insert the generated image array here
   /*Pixel format: Red: 5 bit, Green: 6 bit, Blue: 5 bit*/
