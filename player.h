@@ -3,6 +3,7 @@
 #include "helper_functions.h"
 #include "globals.h"
 #include "position.h"
+#include "pixels.h"
 
 extern const int kPlayerWidth;
 extern const int kPlayerHeight;

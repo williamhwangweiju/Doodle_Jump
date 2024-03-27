@@ -95,7 +95,32 @@ void Game_draw(struct Game* game)
 
 void Game_drawBackground()
 {
-	
+	// WILLIAM
+
+	int image_width = 320; // Image width based on background_map dimensions
+	int image_height = 247; // Image height based on background_map dimensions
+
+	int start_x = (320 - image_width) / 2; // Center the image horizontally
+	int start_y = (240 - image_height) / 2; // Center the image vertically
+
+	draw_background();
+
+	// Draw the background image
+	for (int y = 0; y < image_height - 1; y++)
+	{
+		for (int x = 0; x < image_width; x++)
+		{
+			uint16_t pixel_color = background_map_2d[y][x];
+			plot_pixel(start_x + x, start_y + y, pixel_color);
+		}
+	}
+
+	// Free memory allocated for 2D array
+	for (int i = 0; i < image_height; i++)
+	{
+		free(background_map_2d[i]);
+	}
+	free(background_map_2d);
 }
 
 void Game_checkCollisions(struct Game* game)
