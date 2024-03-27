@@ -100,7 +100,7 @@ void Player_draw(struct Player* player) {
 	int image_height = 40; // Image height based on doodle_map dimensions
 
 	int start_x = (int)(player->pos.x);
-    int start_y = (int)(player->pos.y);
+    	int start_y = (int)(player->pos.y);
 	
 	draw_doodle();
 
