@@ -7,7 +7,7 @@ struct Player PlayerConstructor()
 {
 	struct Player player;
 
-	struct Position startingPos = { screenWidth / 2, 0 };
+	struct Position startingPos = { screenWidth / 2, screenHeight / 2 }; // TO BE CHANGED
 	player.pos = startingPos;
 
 	struct Velocity vel = { 0.0, 2 * kGravityConstant * screenHeight / 2 };
@@ -18,5 +18,11 @@ struct Player PlayerConstructor()
 
 void Player_draw(struct Player* player)
 {
-	// WILLIAM
+	
+}
+
+void Player_update(struct Player* player, bool right, bool left)
+{
+	double horizSpeed = 5;
+	player->vel.x = 5 * (right - left);
 }

@@ -18,3 +18,4 @@ struct Platform
 };
 
 void Platform_draw(struct Platform* platform);
+void Platform_update(struct Platform* platform);

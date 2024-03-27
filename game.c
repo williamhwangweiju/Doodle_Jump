@@ -11,8 +11,8 @@ struct Game GameConstructor(int framesPerSec, bool* playGame)
 	game.player = PlayerConstructor();
 
 	// No keyboard inputs by default
-	game.right = false;
-	game.left = false;
+	game.rightArrow = false;
+	game.leftArrow = false;
 
 	// Generate platforms positions randomly
 	for (int i = 0; i < 10; ++i)
@@ -28,12 +28,23 @@ struct Game GameConstructor(int framesPerSec, bool* playGame)
 		// Set type to default
 		game.platforms[i].type = DEFAULT;
 	}
+
+
 }
 
 void Game_update(struct Game* game)
 {
 	// Check for keyboard left or right inputs
-	Game_updatePlayerDirection(game);
+	Game_updateInputs(game);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		Platform_update(&(game->platforms[i]));
+	}
+
+	Game_checkCollisions(game);
+
+	Player_update(&(game->player), game->rightArrow, game->leftArrow);
 }
 
 int Game_getKeyboardData()
@@ -47,26 +58,26 @@ int Game_getKeyboardData()
 	}
 }
 
-void Game_updatePlayerDirection(struct Game* game)
+void Game_updateInputs(struct Game* game)
 {
 	int key = Game_getKeyboardData();
 
 	// Update right arrow
-	if (!game->right && key == RIGHT_MAKE)
+	if (!game->rightArrow && key == RIGHT_MAKE)
 	{
-		game->right = true;
-	} else if (game->right && key == RIGHT_BREAK)
+		game->rightArrow = true;
+	} else if (game->rightArrow && key == RIGHT_BREAK)
 	{
-		game->right = false;
+		game->rightArrow = false;
 	}
 
 	// Update left arrow
-	if (!game->left && key == LEFT_MAKE)
+	if (!game->leftArrow && key == LEFT_MAKE)
 	{
-		game->left = true;
-	} else if (game->left && key == LEFT_BREAK)
+		game->leftArrow = true;
+	} else if (game->leftArrow && key == LEFT_BREAK)
 	{
-		game->left = false;
+		game->leftArrow = false;
 	}
 }
 
@@ -84,5 +95,16 @@ void Game_draw(struct Game* game)
 
 void Game_drawBackground()
 {
-	// WILLIAM
+	
+}
+
+void Game_checkCollisions(struct Game* game)
+{
+	// Check for player collisions with platforms
+	if (game->player.vel.y > 0)
+	{
+		return;
+	}
+
+
 }

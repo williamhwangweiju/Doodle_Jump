@@ -16,3 +16,4 @@ struct Player
 
 struct Player PlayerConstructor();
 void Player_draw(struct Player* player);
+void Player_update(struct Player* player, bool right, bool left);
