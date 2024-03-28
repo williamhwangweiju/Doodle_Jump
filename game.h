@@ -21,4 +21,4 @@ void Game_updateInputs(struct Game* game);
 void Game_draw(struct Game* game);
 void Game_drawBackground();
 bool Game_checkPlatformCollisions(struct Game* game);
-void world_to_screen(struct Game* game);
+void world_to_screen(struct Game* game, struct Position point);
