@@ -24,3 +24,14 @@ void plot_pixel(int x, int y, short int line_color)
 
     *one_pixel_address = line_color;
 }
+
+void clear_screen() 
+{
+    int x, y;
+
+    for (y = 0; y < 240; y++) {
+        for (x = 0; x < 320; x++) {
+            plot_pixel(x, y, 0);
+        }
+    }
+}
