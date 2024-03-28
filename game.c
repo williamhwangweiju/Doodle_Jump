@@ -173,3 +173,11 @@ bool Game_checkPlatformCollisions(struct Game* game)
 		}
 	}
 }
+
+struct Position world_to_screen(struct Game* game, struct Position point) {
+	double yInScreen = point.y - (game->topOfScreen - screenHeight);
+	yInScreen = screenHeight - yInScreen;
+
+	struct Position pointInScreen = {point.x, yInScreen};
+	return pointInScreen;
+}
