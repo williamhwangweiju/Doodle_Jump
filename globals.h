@@ -12,5 +12,3 @@ extern const volatile int* PS2_ptr;
 
 extern const int screenWidth;
 extern const int screenHeight;
-
-extern const kGravityConstant;

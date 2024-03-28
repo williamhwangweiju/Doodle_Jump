@@ -2,16 +2,24 @@
 
 const int kPlayerWidth = 41;
 const int kPlayerHeight = 40;
+const double jumpSpeed = 10;
+const double horizSpeed = 5;
+const double gravity = 1;
 
 struct Player PlayerConstructor()
 {
 	struct Player player;
 
+	// Place player in middle of screen
 	struct Position startingPos = { screenWidth / 2, screenHeight / 2 }; // TO BE CHANGED
 	player.pos = startingPos;
 
-	struct Velocity vel = { 0.0, 2 * kGravityConstant * screenHeight / 2 };
+	// Player should move up and not horizontally
+	struct Velocity vel = { 0.0, jumpSpeed };
 	player.vel = vel;
+
+	struct Rectangle boundingBox = { startingPos, kPlayerWidth, kPlayerHeight };
+	player.boundingBox = boundingBox;
 
 	return player;
 }
@@ -49,8 +57,26 @@ void Player_draw(struct Player* player)
 	free(doodle_map_2d);
 }
 
-void Player_update(struct Player* player, bool right, bool left)
+void Player_update(struct Player* player, bool right, bool left, bool platformCollision)
 {
-	double horizSpeed = 5;
-	player->vel.x = 5 * (right - left);
+	// Move player left or right
+	player->vel.x = horizSpeed * (right - left);
+	player->pos.x += player->vel.x;
+
+	if (platformCollision)
+	{
+		// If there is a collision with a platform, "jump"
+		player->vel.y = jumpSpeed;
+	} else
+	{
+		// Move up
+		player->vel.y -= gravity;
+	}
+
+	// Move player up or down
+	player->pos.y += player->vel.y;
+
+	// Update bounding box
+	struct Rectangle newBoundingBox = { player->pos, kPlayerWidth, kPlayerHeight };
+	player->boundingBox = newBoundingBox;
 }

@@ -1,10 +1,9 @@
 #include "game.h"
 
-struct Game GameConstructor(int framesPerSec, bool* playGame)
+struct Game GameConstructor(bool* playGame)
 {
 	struct Game game;
 
-	game.framesPerSec = framesPerSec;
 	game.playGame = playGame;
 
 	// Create player object
@@ -19,17 +18,16 @@ struct Game GameConstructor(int framesPerSec, bool* playGame)
 	{
 		// For initial platforms, height should be within top two-thirds of screen
 		struct Position platformPos = { rand() % screenWidth, (screenHeight / 3) + rand() % (screenHeight - (screenHeight / 3)) };
-		game.platforms[i].pos = platformPos;
 
 		// Set velocity to 0
-		struct Velocity platformVel = { 0.0, 0.0 };
-		game.platforms[i].vel = platformVel;
+		struct Velocity platformVel = { (-1 * rand()) * 5.0, 0.0 };
 
-		// Set type to default
-		game.platforms[i].type = DEFAULT;
+		game.platforms[i] = PlatformConstructor(DEFAULT, platformPos, platformVel);
 	}
 
+	game.topOfScreen = screenHeight;
 
+	return game;
 }
 
 void Game_update(struct Game* game)
@@ -37,14 +35,47 @@ void Game_update(struct Game* game)
 	// Check for keyboard left or right inputs
 	Game_updateInputs(game);
 
+	// Update platforms
 	for (int i = 0; i < 10; ++i)
 	{
 		Platform_update(&(game->platforms[i]));
 	}
 
-	Game_checkCollisions(game);
+	// Check if there is a player collision with platform
+	bool platformCollision = Game_checkPlatformCollisions(game);
 
-	Player_update(&(game->player), game->rightArrow, game->leftArrow);
+	// Update player
+	Player_update(&(game->player), game->rightArrow, game->leftArrow, platformCollision);
+
+	// Check if player has fallen
+	if (game->player.pos.y + game->player.boundingBox.height < game->topOfScreen - screenHeight)
+	{
+		*(game->playGame) = false;
+		return;
+	}
+
+	// Update topOfScreen if player is too high
+	if (game->player.pos.y > game->topOfScreen - (screenHeight / 3.0))
+	{
+		game->topOfScreen = game->player.pos.y + (screenHeight / 3.0);
+
+		// Check if any platforms are out of view
+		for (int i = 0; i < 10; ++i)
+		{
+			struct Platform currPlatform = game->platforms[i];
+			double platformTop = currPlatform.pos.x + currPlatform.boundingBox.height;
+
+			if (platformTop < game->topOfScreen - screenHeight)
+			{
+				// If one is, replace it with a new platform at the top of the screen
+
+				struct Position newPlatformPos = { rand() % screenWidth, game->topOfScreen };
+				struct Velocity newPlatformVel = { (-1 * rand()) * 5.0, 0.0 };
+
+				game->platforms[i] = PlatformConstructor(DEFAULT, newPlatformPos, newPlatformVel);
+			}
+		}
+	}
 }
 
 int Game_getKeyboardData()
@@ -83,6 +114,8 @@ void Game_updateInputs(struct Game* game)
 
 void Game_draw(struct Game* game)
 {
+	// Draw background, player, and platforms
+
 	Game_drawBackground();
 
 	Player_draw(&(game->player));
@@ -123,13 +156,20 @@ void Game_drawBackground()
 	free(background_map_2d);
 }
 
-void Game_checkCollisions(struct Game* game)
+bool Game_checkPlatformCollisions(struct Game* game)
 {
-	// Check for player collisions with platforms
-	if (game->player.vel.y > 0)
+	// If the player is moving up, platforms should not affect them
+	if (game->player.vel.y < 0)
 	{
-		return;
+		return false;
 	}
 
-
+	// Check for collision with platform
+	for (int i = 0; i < 10; ++i)
+	{
+		if (rectanglesIntersect(game->player.boundingBox, game->platforms[i].boundingBox))
+		{
+			return true;
+		}
+	}
 }

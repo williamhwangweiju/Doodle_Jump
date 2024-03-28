@@ -134,6 +134,7 @@
     <ClCompile Include="pixels.c" />
     <ClCompile Include="platform.c" />
     <ClCompile Include="player.c" />
+    <ClCompile Include="position.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h" />

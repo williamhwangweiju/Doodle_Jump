@@ -13,8 +13,9 @@ struct Player
 	//// PUBLIC ////
 	struct Position pos;
 	struct Velocity vel;
+	struct Rectangle boundingBox;
 };
 
 struct Player PlayerConstructor();
 void Player_draw(struct Player* player);
-void Player_update(struct Player* player, bool right, bool left);
+void Player_update(struct Player* player, bool right, bool left, bool platformCollision);
