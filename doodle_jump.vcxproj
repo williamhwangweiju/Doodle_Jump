@@ -128,22 +128,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="doodle_jump.c" />
-    <ClCompile Include="game.c" />
-    <ClCompile Include="globals.c" />
-    <ClCompile Include="helper_functions.c" />
-    <ClCompile Include="pixels.c" />
-    <ClCompile Include="platform.c" />
-    <ClCompile Include="player.c" />
-    <ClCompile Include="position.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="game.h" />
-    <ClInclude Include="globals.h" />
-    <ClInclude Include="helper_functions.h" />
-    <ClInclude Include="pixels.h" />
-    <ClInclude Include="platform.h" />
-    <ClInclude Include="player.h" />
-    <ClInclude Include="position.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
