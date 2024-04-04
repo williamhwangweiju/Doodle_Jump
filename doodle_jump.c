@@ -50,6 +50,8 @@ bool leftArrow = false;
 
 // Other globals
 int bottomOfScreen = 0;
+int prevBottomOfScreen = 0;
+int secondPrevBottomOfScreen = 0;
 struct Vector prevDoodlePos = { 0,0 };
 struct Vector secondPrevDoodlePos = { 0,0 };
 struct Vector prevPlatforms[NUM_PLATFORMS] = { {0,0},{0,0},{0,0},{0,0},{0,0} };
@@ -387,7 +389,7 @@ void convert_to_2d(uint16_t** matrix, const uint8_t* arr, int row, int col);
 void setup_platform_sprite();
 void setup_doodle_sprite();
 void setup_background();
-struct Vector world_to_screen(struct Vector pos);
+struct Vector world_to_screen(struct Vector pos, int bottom);
 void checkKey(bool* keyBool, unsigned char code);
 void updateKeys();
 
@@ -454,7 +456,7 @@ int main()
 
 		// Update platforms
 		for (int i = 0; i < NUM_PLATFORMS; ++i)
-		{
+		{	
 			secondPrevPlatforms[i] = prevPlatforms[i];
 			prevPlatforms[i] = platforms[i];
 		}
@@ -528,6 +530,9 @@ int main()
 			doodle.vel.y = jumpSpeed;
 		}
 
+		secondPrevBottomOfScreen = prevBottomOfScreen;
+		prevBottomOfScreen = bottomOfScreen;
+
 		// If player is too high, move screen up
 		if (doodle.pos.y >= bottomOfScreen + (screenHeight * 2.0 / 3.0))
 		{
@@ -599,7 +604,7 @@ void draw_platforms(struct Vector pos)
 	int image_width = platformWidth; // Image width based on platform_map dimensions
 	int image_height = platformHeight; // Image height based on platform_map dimensions
 
-	pos = world_to_screen(pos);
+	pos = world_to_screen(pos, bottomOfScreen);
 
 	int start_x = pos.x;
 	int start_y = pos.y - platformHeight;
@@ -624,7 +629,7 @@ void draw_doodle(struct Vector pos)
 	int image_width = doodleWidth; // Image width based on doodle_map dimensions
 	int image_height = doodleHeight; // Image height based on doodle_map dimensions
 
-	pos = world_to_screen(pos);
+	pos = world_to_screen(pos, bottomOfScreen);
 
 	int start_x = pos.x;
 	int start_y = pos.y - doodleHeight;
@@ -677,7 +682,7 @@ void draw_background()
 	int image_width = doodleWidth;
 	int image_height = doodleHeight;
 
-	struct Vector pos = world_to_screen(secondPrevDoodlePos);
+	struct Vector pos = world_to_screen(secondPrevDoodlePos, secondPrevBottomOfScreen);
 
 	int start_x = pos.x;
 	int start_y = pos.y - doodleHeight;
@@ -701,7 +706,7 @@ void draw_background()
 		image_width = platformWidth;
 		image_height = platformHeight;
 
-		pos = world_to_screen(secondPrevPlatforms[i]);
+		pos = world_to_screen(secondPrevPlatforms[i], secondPrevBottomOfScreen);
 
 		start_x = pos.x;
 		start_y = pos.y - platformHeight;
@@ -826,9 +831,9 @@ void setup_background()
 	convert_to_2d(background_map_2d, background_map, image_height, image_width);
 }
 
-struct Vector world_to_screen(struct Vector pos)
+struct Vector world_to_screen(struct Vector pos, int bottom)
 {
-	pos.y -= bottomOfScreen;
+	pos.y -= bottom;
 	pos.y = screenHeight - pos.y;
 
 	return pos;
