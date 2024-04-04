@@ -830,8 +830,12 @@ int main()
 		platforms[i] = platformPos;
 	}
 
-	draw_menu();
 	while (space == false) {
+		draw_menu();
+
+		wait_for_vsync();
+		pixel_buffer_start = *(pixel_ctrl_ptr + 1);
+
 		draw_menu();
 		updateKeys();
 	}
@@ -1201,7 +1205,7 @@ void draw_menu()
 	int image_width = menuWidth; // Image width based on menu_map dimensions
 	int image_height = menuHeight; // Image height based on menu_map dimensions
 
-	int start_x = 0; // Center the image horizontally
+	int start_x = 52; // Center the image horizontally
 	int start_y = 0; // Center the image vertically
 
 	// Draw the background image
