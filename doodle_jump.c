@@ -4,11 +4,9 @@
 #include <stdint.h>
 #include <time.h>
 
-#define NUM_PLATFORMS 5
-#define NUM_PLATFORMS2 2
-#define NUM_PLATFORMS3 2
-#define NUM_MONSTER1 1
-#define NUM_MONSTER2 1
+#define NUM_PLATFORMS 7
+
+enum PlatformType { DEFAULT, MOVING, BREAKING };
 
 struct Vector
 {
@@ -18,6 +16,13 @@ struct Vector
 
 struct Doodle
 {
+	struct Vector pos;
+	struct Vector vel;
+};
+
+struct Platform
+{
+	enum PlatformType type;
 	struct Vector pos;
 	struct Vector vel;
 };
@@ -77,27 +82,21 @@ bool space = false;
 
 // Other globals
 int bottomOfScreen = 0;
-	// Previous position (BottomOfScreen)
+// Previous position (BottomOfScreen)
 int prevBottomOfScreen = 0;
 int secondPrevBottomOfScreen = 0;
-	// Previous position (Doodle)
+// Previous position (Doodle)
 struct Vector prevDoodlePos = { 0,0 };
 struct Vector secondPrevDoodlePos = { 0,0 };
-	// Previous position (Monster 1)
+// Previous position (Monster 1)
 struct Vector prevMonster1Pos = { 0,0 };
 struct Vector secondPrevMonster1Pos = { 0,0 };
-	// Previous position (Monster 2)
+// Previous position (Monster 2)
 struct Vector prevMonster2Pos = { 0,0 };
 struct Vector secondPrevMonster2Pos = { 0,0 };
-	// Previous position (platforms)
+// Previous position (platforms)
 struct Vector prevPlatforms[NUM_PLATFORMS] = { {0,0},{0,0},{0,0},{0,0},{0,0} };
 struct Vector secondPrevPlatforms[NUM_PLATFORMS] = { {0,0},{0,0},{0,0},{0,0},{0,0} };
-	// Previous position (platforms2)
-struct Vector prevPlatforms2[NUM_PLATFORMS2] = { {0,0},{0,0} };
-struct Vector secondPrevPlatforms2[NUM_PLATFORMS2] = { {0,0},{0,0} };
-	// Previous position (platforms3)
-struct Vector prevPlatforms3[NUM_PLATFORMS3] = { {0,0},{0,0} };
-struct Vector secondPrevPlatforms3[NUM_PLATFORMS3] = { {0,0},{0,0} };
 
 // Pixels for the platform
 const uint8_t platform_map[] = {
@@ -1064,9 +1063,6 @@ int main()
 	setup_menu();
 	setup_gameOver();
 
-	// Set up game
-	bool playGame = true;
-
 	while (1)
 	{
 		// Set the screen to black when the user starts/restarts the game
@@ -1083,15 +1079,23 @@ int main()
 		struct Doodle doodle = { initialPos, initialVel };
 
 		// Set up platforms
-		struct Vector platforms[NUM_PLATFORMS] = { {0,0},{0,0},{0,0},{0,0},{0,0} };
+		struct Vector platformVec = { 0, 0 };
+		struct Platform platforms[NUM_PLATFORMS] = { {DEFAULT, platformVec, platformVec},
+												  {DEFAULT, platformVec, platformVec},
+												  {DEFAULT, platformVec, platformVec},
+												  {DEFAULT, platformVec, platformVec},
+												  {DEFAULT, platformVec, platformVec} };
+		double highestBottomOfPlatform = 200;
+		double maxPlatformDistance = 150;
 		for (int i = 0; i < NUM_PLATFORMS; ++i)
 		{
 			struct Vector platformPos = { rand() % screenWidth, rand() % screenHeight };
 
-			// Make sure platforms don't overlap
+			// Make sure platforms don't overlap or are too far apart
 			for (int j = 0; j < NUM_PLATFORMS; ++j)
 			{
-				while (platformPos.y + platformHeight >= platforms[j].y && platformPos.y <= platforms[j].y + platformHeight)
+				while ((platformPos.y + platformHeight + 10 >= platforms[j].pos.y && platformPos.y <= platforms[j].pos.y + platformHeight + 10)
+					|| (platformPos.y > highestBottomOfPlatform + maxPlatformDistance))
 				{
 					platformPos.y = rand() % screenHeight;
 				}
@@ -1106,11 +1110,16 @@ int main()
 				platformPos.x = screenWidth - platformWidth;
 			}
 
-			platforms[i] = platformPos;
+			if (platformPos.y > highestBottomOfPlatform)
+			{
+				highestBottomOfPlatform = platformPos.y;
+			}
+
+			platforms[i].pos = platformPos;
 		}
 
-		struct Vector monster1Pos = { screenWidth / 2, screenHeight / 2 };
-		struct Vector monster2Pos = { screenWidth / 2, screenHeight / 2 };
+		struct Vector monster1Pos = { -300, -300 };
+		struct Vector monster2Pos = { -300, -300 };
 
 		// Stay in the menu until pressed space
 		while (space == false)
@@ -1127,8 +1136,8 @@ int main()
 		// Draw
 		draw_background_initial(pixel_ctrl_ptr);
 
-		double milestoneHeight = 2000;
-		int numMilestones = 0;
+		double milestoneHeight = 250;
+		int numMilestones = 1;
 		while (1)
 		{
 			// Draw background
@@ -1137,12 +1146,23 @@ int main()
 			// Draw platforms
 			for (int i = 0; i < NUM_PLATFORMS; ++i)
 			{
-				struct Vector pos = { platforms[i].x, platforms[i].y };
-				draw_platforms(pos);
+				struct Vector pos = { platforms[i].pos.x, platforms[i].pos.y };
+
+				if (platforms[i].type == DEFAULT)
+				{
+					draw_platforms(pos);
+				} else if (platforms[i].type == MOVING)
+				{
+					draw_platforms2(pos);
+				} else if (platforms[i].type == BREAKING)
+				{
+					draw_platforms3(pos);
+				}
 			}
 
-			// Draw monster1
+			// Draw monsters
 			draw_monster1(monster1Pos);
+			draw_monster2(monster2Pos);
 
 			// Draw doodle
 			draw_doodle(doodle.pos);
@@ -1150,45 +1170,197 @@ int main()
 			// Update inputs
 			updateKeys();
 
-			// Update platforms
+			// Update saved platform positions
 			for (int i = 0; i < NUM_PLATFORMS; ++i)
 			{
 				secondPrevPlatforms[i] = prevPlatforms[i];
-				prevPlatforms[i] = platforms[i];
+				prevPlatforms[i] = platforms[i].pos;
 			}
 
-			// Update player
+			// Update saved monster positions
+			secondPrevMonster1Pos = prevMonster1Pos;
+			prevMonster1Pos = monster1Pos;
+			secondPrevMonster2Pos = prevMonster2Pos;
+			prevMonster2Pos = monster2Pos;
+
+			// Update saved player position
 			secondPrevDoodlePos = prevDoodlePos;
 			prevDoodlePos = doodle.pos;
+
+			// Update saved bottomOfScreen
+			secondPrevBottomOfScreen = prevBottomOfScreen;
+			prevBottomOfScreen = bottomOfScreen;
+
+			// Determine if monster should maybe be spawned
+			if (bottomOfScreen > numMilestones * milestoneHeight)
+			{
+				numMilestones++;
+
+				bool newMonster = rand() % 4 == 0;
+				int whichMonster = (rand() % 2) + 1;
+
+				if (newMonster)
+				{
+					struct Vector newPos = { rand() % screenWidth, bottomOfScreen + screenHeight + (rand() % (screenHeight / 3)) };
+
+					if (whichMonster == 1)
+					{
+						// Make sure monster isn't off-screen on left or right
+						if (newPos.x < 0)
+						{
+							newPos.x = 0;
+						} else if (newPos.x + monster1Width > screenWidth)
+						{
+							newPos.x = screenWidth - monster1Width;
+						}
+
+						monster1Pos = newPos;
+					} else if (whichMonster == 2)
+					{
+						// Make sure monster isn't off-screen on left or right
+						if (newPos.x < 0)
+						{
+							newPos.x = 0;
+						} else if (newPos.x + monster2Width > screenWidth)
+						{
+							newPos.x = screenWidth - monster2Width;
+						}
+
+						monster2Pos = newPos;
+					}
+				}
+			}
 
 			// Check for collisions
 			bool platformCollision = false;
 			double newY = -1;
+
+			double doodleBottom = doodle.pos.y;
+			double doodleLeft = doodle.pos.x;
+			double doodleTop = doodle.pos.y + doodleHeight;
+			double doodleRight = doodle.pos.x + doodleWidth;
+
 			if (doodle.vel.y <= 0)
 			{
+
+
 				for (int i = 0; i < NUM_PLATFORMS; ++i)
 				{
-					double doodleBottom = doodle.pos.y;
-					double platformBottom = platforms[i].y;
+					double platformBottom = platforms[i].pos.y;
+					double platformLeft = platforms[i].pos.x;
+					double platformTop = platforms[i].pos.y + platformHeight;
+					double platformRight = platforms[i].pos.x + platformWidth;
 
-					double doodleLeft = doodle.pos.x;
-					double platformLeft = platforms[i].x;
-
-					double doodleTop = doodle.pos.y + doodleHeight;
-					double platformTop = platforms[i].y + platformHeight;
-
-					double doodleRight = doodle.pos.x + doodleWidth;
-					double platformRight = platforms[i].x + platformWidth;
-
-					if (doodleLeft < platformRight && doodleRight > platformLeft && doodleBottom > platformBottom && doodleBottom < platformTop)
+					if (doodleLeft < platformRight && doodleRight > platformLeft && doodleBottom > platformBottom && doodleBottom <= platformTop)
 					{
 						platformCollision = true;
 						newY = platformTop;
+
+						if (platforms[i].type == BREAKING)
+						{
+							struct Vector platformPos = { rand() % screenWidth, bottomOfScreen + screenHeight + (rand() % (screenHeight / 3)) };
+
+							enum PlatformType newType = DEFAULT;
+							int randInt = rand() % 2;
+							if (randInt == 0)
+							{
+								newType = MOVING;
+							} else if (randInt == 1)
+							{
+								newType = BREAKING;
+							}
+
+							// Make sure platform isn't off-screen on left or right
+							if (platformPos.x < 0)
+							{
+								platformPos.x = 0;
+							} else if (platformPos.x + platformWidth > screenWidth)
+							{
+								platformPos.x = screenWidth - platformWidth;
+							}
+
+							// Make sure platforms don't overlap
+							for (int j = 0; j < NUM_PLATFORMS; ++j)
+							{
+								while ((platformPos.y + platformHeight + 10 >= platforms[j].pos.y && platformPos.y <= platforms[j].pos.y + platformHeight + 10)
+									|| platformPos.y > highestBottomOfPlatform + maxPlatformDistance)
+								{
+									platformPos.y = bottomOfScreen + screenHeight + (rand() % (screenHeight / 3));
+
+									// Make sure platform isn't off-screen on left or right
+									if (platformPos.x < 0)
+									{
+										platformPos.x = 0;
+									} else if (platformPos.x + platformWidth > screenWidth)
+									{
+										platformPos.x = screenWidth - platformWidth;
+									}
+								}
+							}
+
+							if (platformPos.y > highestBottomOfPlatform)
+							{
+								highestBottomOfPlatform = platformPos.y;
+							}
+
+							struct Vector newVel = { 0,0 };
+							if (newType == MOVING)
+							{
+								newVel.x = (((rand() % 2) * 2) - 1) * 5;
+							}
+
+							struct Platform newPlat = { newType, platformPos, newVel };
+							platforms[i] = newPlat;
+						}
+
 						break;
 					}
 				}
 			}
 
+			double monster1Bottom = monster1Pos.y;
+			double monster1Left = monster1Pos.x;
+			double monster1Top = monster1Pos.y + monster1Height;
+			double monster1Right = monster1Pos.x + monster1Width;
+
+			if (doodleLeft < monster1Right && doodleRight > monster1Left && doodleTop > monster1Bottom && doodleBottom < monster1Top)
+			{
+				break;
+			}
+
+			double monster2Bottom = monster2Pos.y;
+			double monster2Left = monster2Pos.x;
+			double monster2Top = monster2Pos.y + monster2Height;
+			double monster2Right = monster2Pos.x + monster2Width;
+
+			if (doodleLeft < monster2Right && doodleRight > monster2Left && doodleTop > monster2Bottom && doodleBottom < monster2Top)
+			{
+				break;
+			}
+
+			// Update moving platforms
+			for (int i = 0; i < NUM_PLATFORMS; ++i)
+			{
+				if (platforms[i].type != MOVING)
+				{
+					continue;
+				}
+
+				platforms[i].pos.x += platforms[i].vel.x;
+
+				// Make sure platform isn't off-screen on left or right
+				if (platforms[i].pos.x < 0)
+				{
+					platforms[i].pos.x = 0;
+					platforms[i].vel.x *= -1;
+				} else if (platforms[i].pos.x + platformWidth > screenWidth)
+				{
+					platforms[i].pos.x = screenWidth - platformWidth;
+					platforms[i].vel.x *= -1;
+				}
+			}
+
+			// Update player
 			doodle.vel.x = playerHorizVel * ((int)rightArrow - (int)leftArrow);
 			doodle.pos.x += doodle.vel.x;
 
@@ -1214,12 +1386,8 @@ int main()
 				// doodle.pos.y = bottomOfScreen;
 				// doodle.vel.y = jumpSpeed;
 
-				playGame = false;
 				break;
 			}
-
-			secondPrevBottomOfScreen = prevBottomOfScreen;
-			prevBottomOfScreen = bottomOfScreen;
 
 			// If player is too high, move screen up
 			if (doodle.pos.y >= bottomOfScreen + (screenHeight * 2.0 / 3.0))
@@ -1230,17 +1398,18 @@ int main()
 			// If any platforms are out of view, create new one
 			for (int i = 0; i < NUM_PLATFORMS; ++i)
 			{
-				if (platforms[i].y + platformHeight - bottomOfScreen < 0)
+				if (platforms[i].pos.y + platformHeight - bottomOfScreen < 0)
 				{
 					struct Vector platformPos = { rand() % screenWidth, bottomOfScreen + screenHeight + (rand() % (screenHeight / 3)) };
 
-					// Make sure platforms don't overlap
-					for (int j = 0; j < NUM_PLATFORMS; ++j)
+					enum PlatformType newType = DEFAULT;
+					int randInt = rand() % (NUM_PLATFORMS * 2);
+					if (randInt == 0)
 					{
-						while (platformPos.y + platformHeight >= platforms[j].y && platformPos.y <= platforms[j].y + platformHeight)
-						{
-							platformPos.y = rand() % screenHeight;
-						}
+						newType = MOVING;
+					} else if (randInt == 1)
+					{
+						newType = BREAKING;
 					}
 
 					// Make sure platform isn't off-screen on left or right
@@ -1252,7 +1421,38 @@ int main()
 						platformPos.x = screenWidth - platformWidth;
 					}
 
-					platforms[i] = platformPos;
+					// Make sure platforms don't overlap
+					for (int j = 0; j < NUM_PLATFORMS; ++j)
+					{
+						while ((platformPos.y + platformHeight + 10 >= platforms[j].pos.y && platformPos.y <= platforms[j].pos.y + platformHeight + 10)
+							|| platformPos.y > highestBottomOfPlatform + maxPlatformDistance)
+						{
+							platformPos.y = bottomOfScreen + screenHeight + (rand() % (screenHeight / 3));
+
+							// Make sure platform isn't off-screen on left or right
+							if (platformPos.x < 0)
+							{
+								platformPos.x = 0;
+							} else if (platformPos.x + platformWidth > screenWidth)
+							{
+								platformPos.x = screenWidth - platformWidth;
+							}
+						}
+					}
+
+					if (platformPos.y > highestBottomOfPlatform)
+					{
+						highestBottomOfPlatform = platformPos.y;
+					}
+
+					struct Vector newVel = { 0,0 };
+					if (newType == MOVING)
+					{
+						newVel.x = (((rand() % 2) * 2) - 1) * 5;
+					}
+
+					struct Platform newPlat = { newType, platformPos, newVel };
+					platforms[i] = newPlat;
 				}
 			}
 
@@ -1513,7 +1713,7 @@ void draw_background_initial_helper()
 	int start_y = 0; // Center the image vertically
 
 	// Draw the background image
-	for (int y = 0; y < image_height - 1; y++)
+	for (int y = 0; y < image_height; y++)
 	{
 		for (int x = 0; x < image_width; x++)
 		{
@@ -1614,107 +1814,49 @@ void draw_background()
 		}
 	}
 
-	// Draw over platforms2
-	for (int i = 0; i < NUM_PLATFORMS2; ++i)
-	{
-		image_width = platform2Width;
-		image_height = platform2Height;
-
-		pos = world_to_screen(secondPrevPlatforms2[i], secondPrevBottomOfScreen);
-
-		start_x = pos.x;
-		start_y = pos.y - platform2Height;
-
-		for (int y = 0; y < image_height - 1; y++)
-		{
-			for (int x = 0; x < image_width; x++)
-			{
-				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
-				{
-					continue;
-				}
-
-				uint16_t pixel_color = platform2_map_2d[start_y + y][start_x + x];
-				plot_pixel(start_x + x, start_y + y, pixel_color);
-			}
-		}
-	}
-
-	// Draw over platforms3
-	for (int i = 0; i < NUM_PLATFORMS3; ++i)
-	{
-		image_width = platform3Width;
-		image_height = platform3Height;
-
-		pos = world_to_screen(secondPrevPlatforms3[i], secondPrevBottomOfScreen);
-
-		start_x = pos.x;
-		start_y = pos.y - platform3Height;
-
-		for (int y = 0; y < image_height - 1; y++)
-		{
-			for (int x = 0; x < image_width; x++)
-			{
-				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
-				{
-					continue;
-				}
-
-				uint16_t pixel_color = platform3_map_2d[start_y + y][start_x + x];
-				plot_pixel(start_x + x, start_y + y, pixel_color);
-			}
-		}
-	}
-
 	// Draw over Monster 1
-	for (int i = 0; i < NUM_MONSTER1; ++i)
+	image_width = monster1Width;
+	image_height = monster1Height;
+
+	pos = world_to_screen(secondPrevMonster1Pos, secondPrevBottomOfScreen);
+
+	start_x = pos.x;
+	start_y = pos.y - monster1Height;
+
+	for (int y = 0; y < image_height - 1; y++)
 	{
-		image_width = monster1Width;
-		image_height = monster1Height;
-
-		pos = world_to_screen(secondPrevMonster1Pos[i], secondPrevBottomOfScreen);
-
-		start_x = pos.x;
-		start_y = pos.y - monster1Height;
-
-		for (int y = 0; y < image_height - 1; y++)
+		for (int x = 0; x < image_width; x++)
 		{
-			for (int x = 0; x < image_width; x++)
+			if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
 			{
-				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
-				{
-					continue;
-				}
-
-				uint16_t pixel_color = monster1_map_2d[start_y + y][start_x + x];
-				plot_pixel(start_x + x, start_y + y, pixel_color);
+				continue;
 			}
+
+			uint16_t pixel_color = background_map_2d[start_y + y][start_x + x];
+			plot_pixel(start_x + x, start_y + y, pixel_color);
 		}
 	}
 
 	// Draw over Monster 2
-	for (int i = 0; i < NUM_MONSTER2; ++i)
+	image_width = monster2Width;
+	image_height = monster2Height;
+
+	pos = world_to_screen(secondPrevMonster2Pos, secondPrevBottomOfScreen);
+
+	start_x = pos.x;
+	start_y = pos.y - monster2Height;
+
+	for (int y = 0; y < image_height - 1; y++)
 	{
-		image_width = monster2Width;
-		image_height = monster2Height;
-
-		pos = world_to_screen(secondPrevMonster2Pos[i], secondPrevBottomOfScreen);
-
-		start_x = pos.x;
-		start_y = pos.y - monster2Height;
-
-		for (int y = 0; y < image_height - 1; y++)
+		for (int x = 0; x < image_width; x++)
 		{
-			for (int x = 0; x < image_width; x++)
+			if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
 			{
-				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
-				{
-					continue;
-				}
-
-				uint16_t pixel_color = monster2_map_2d[start_y + y][start_x + x];
-				plot_pixel(start_x + x, start_y + y, pixel_color);
+				continue;
 			}
+
+			uint16_t pixel_color = background_map_2d[start_y + y][start_x + x];
+			plot_pixel(start_x + x, start_y + y, pixel_color);
 		}
 	}
 }
