@@ -5,6 +5,10 @@
 #include <time.h>
 
 #define NUM_PLATFORMS 5
+#define NUM_PLATFORMS2 2
+#define NUM_PLATFORMS3 2
+#define NUM_MONSTER1 1
+#define NUM_MONSTER2 1
 
 struct Vector
 {
@@ -73,12 +77,27 @@ bool space = false;
 
 // Other globals
 int bottomOfScreen = 0;
+	// Previous position (BottomOfScreen)
 int prevBottomOfScreen = 0;
 int secondPrevBottomOfScreen = 0;
+	// Previous position (Doodle)
 struct Vector prevDoodlePos = { 0,0 };
 struct Vector secondPrevDoodlePos = { 0,0 };
+	// Previous position (Monster 1)
+struct Vector prevMonster1Pos = { 0,0 };
+struct Vector secondPrevMonster1Pos = { 0,0 };
+	// Previous position (Monster 2)
+struct Vector prevMonster2Pos = { 0,0 };
+struct Vector secondPrevMonster2Pos = { 0,0 };
+	// Previous position (platforms)
 struct Vector prevPlatforms[NUM_PLATFORMS] = { {0,0},{0,0},{0,0},{0,0},{0,0} };
 struct Vector secondPrevPlatforms[NUM_PLATFORMS] = { {0,0},{0,0},{0,0},{0,0},{0,0} };
+	// Previous position (platforms2)
+struct Vector prevPlatforms2[NUM_PLATFORMS2] = { {0,0},{0,0} };
+struct Vector secondPrevPlatforms2[NUM_PLATFORMS2] = { {0,0},{0,0} };
+	// Previous position (platforms3)
+struct Vector prevPlatforms3[NUM_PLATFORMS3] = { {0,0},{0,0} };
+struct Vector secondPrevPlatforms3[NUM_PLATFORMS3] = { {0,0},{0,0} };
 
 // Pixels for the platform
 const uint8_t platform_map[] = {
@@ -1590,6 +1609,110 @@ void draw_background()
 				}
 
 				uint16_t pixel_color = background_map_2d[start_y + y][start_x + x];
+				plot_pixel(start_x + x, start_y + y, pixel_color);
+			}
+		}
+	}
+
+	// Draw over platforms2
+	for (int i = 0; i < NUM_PLATFORMS2; ++i)
+	{
+		image_width = platform2Width;
+		image_height = platform2Height;
+
+		pos = world_to_screen(secondPrevPlatforms2[i], secondPrevBottomOfScreen);
+
+		start_x = pos.x;
+		start_y = pos.y - platform2Height;
+
+		for (int y = 0; y < image_height - 1; y++)
+		{
+			for (int x = 0; x < image_width; x++)
+			{
+				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
+				{
+					continue;
+				}
+
+				uint16_t pixel_color = platform2_map_2d[start_y + y][start_x + x];
+				plot_pixel(start_x + x, start_y + y, pixel_color);
+			}
+		}
+	}
+
+	// Draw over platforms3
+	for (int i = 0; i < NUM_PLATFORMS3; ++i)
+	{
+		image_width = platform3Width;
+		image_height = platform3Height;
+
+		pos = world_to_screen(secondPrevPlatforms3[i], secondPrevBottomOfScreen);
+
+		start_x = pos.x;
+		start_y = pos.y - platform3Height;
+
+		for (int y = 0; y < image_height - 1; y++)
+		{
+			for (int x = 0; x < image_width; x++)
+			{
+				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
+				{
+					continue;
+				}
+
+				uint16_t pixel_color = platform3_map_2d[start_y + y][start_x + x];
+				plot_pixel(start_x + x, start_y + y, pixel_color);
+			}
+		}
+	}
+
+	// Draw over Monster 1
+	for (int i = 0; i < NUM_MONSTER1; ++i)
+	{
+		image_width = monster1Width;
+		image_height = monster1Height;
+
+		pos = world_to_screen(secondPrevMonster1Pos[i], secondPrevBottomOfScreen);
+
+		start_x = pos.x;
+		start_y = pos.y - monster1Height;
+
+		for (int y = 0; y < image_height - 1; y++)
+		{
+			for (int x = 0; x < image_width; x++)
+			{
+				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
+				{
+					continue;
+				}
+
+				uint16_t pixel_color = monster1_map_2d[start_y + y][start_x + x];
+				plot_pixel(start_x + x, start_y + y, pixel_color);
+			}
+		}
+	}
+
+	// Draw over Monster 2
+	for (int i = 0; i < NUM_MONSTER2; ++i)
+	{
+		image_width = monster2Width;
+		image_height = monster2Height;
+
+		pos = world_to_screen(secondPrevMonster2Pos[i], secondPrevBottomOfScreen);
+
+		start_x = pos.x;
+		start_y = pos.y - monster2Height;
+
+		for (int y = 0; y < image_height - 1; y++)
+		{
+			for (int x = 0; x < image_width; x++)
+			{
+				if (start_x + x >= screenWidth || start_x + x < 0 || start_y + y >= screenHeight || start_y + y < 0)
+				{
+					continue;
+				}
+
+				uint16_t pixel_color = monster2_map_2d[start_y + y][start_x + x];
 				plot_pixel(start_x + x, start_y + y, pixel_color);
 			}
 		}
