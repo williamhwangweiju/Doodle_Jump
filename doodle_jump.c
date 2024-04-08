@@ -33,16 +33,16 @@ short int Buffer2[240][512];
 
 // Seven-segment display segments (a - g)
 const uint8_t segments[10] = {
-    0b00111111, // 0
-    0b00000110, // 1
-    0b01011011, // 2
-    0b01001111, // 3
-    0b01100110, // 4
-    0b01101101, // 5
-    0b01111101, // 6
-    0b00000111, // 7
-    0b01111111, // 8
-    0b01101111  // 9
+	0b00111111, // 0
+	0b00000110, // 1
+	0b01011011, // 2
+	0b01001111, // 3
+	0b01100110, // 4
+	0b01101101, // 5
+	0b01111101, // 6
+	0b00000111, // 7
+	0b01111111, // 8
+	0b01101111  // 9
 };
 
 uint16_t** platform_map_2d;
@@ -1140,7 +1140,7 @@ int main()
 
 		struct Vector monster1Pos = { -300, -300 };
 		struct Vector monster2Pos = { -300, -300 };
-		
+
 		// Set/reset the LEDs
 		displayScore(0);
 
@@ -1214,7 +1214,7 @@ int main()
 			secondPrevBottomOfScreen = prevBottomOfScreen;
 			prevBottomOfScreen = bottomOfScreen;
 
-			displayScore(bottomOfScreen);
+			displayScore(bottomOfScreen / 10);
 
 			// Determine if monster should maybe be spawned
 			if (bottomOfScreen > numMilestones * milestoneHeight)
@@ -2127,17 +2127,19 @@ void updateKeys()
 	checkKey(&space, 0x29);
 }
 
-void displayScore(int score) {
-    // Array to store individual digits of the score
-    int digits[6] = {0};
+void displayScore(int score)
+{
+	// Array to store individual digits of the score
+	int digits[6] = { 0 };
 
-    // Extract digits from the score
-    for (int i = 0; i < 6; ++i) {
-        digits[i] = score % 10; // Extract least significant digit
-        score /= 10; // Remove least significant digit
-    }
+	// Extract digits from the score
+	for (int i = 0; i < 6; ++i)
+	{
+		digits[i] = score % 10; // Extract least significant digit
+		score /= 10; // Remove least significant digit
+	}
 
-    // Display each digit on the seven-segment displays
-    *HEX_BASE1 = (segments[digits[3]] << 24) | (segments[digits[2]] << 16) | (segments[digits[1]] << 8) | (segments[digits[0]]);
+	// Display each digit on the seven-segment displays
+	*HEX_BASE1 = (segments[digits[3]] << 24) | (segments[digits[2]] << 16) | (segments[digits[1]] << 8) | (segments[digits[0]]);
 	*HEX_BASE2 = (segments[digits[5]] << 8) | (segments[digits[4]]);
 }
